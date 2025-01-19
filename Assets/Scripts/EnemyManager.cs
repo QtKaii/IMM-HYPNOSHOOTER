@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class EnemyManager : MonoBehaviour
 {
-    [SerializeField] private GameObject enemyPrefab;
+    [SerializeField] private GameObject[] enemyPrefabs;
     [SerializeField] private int maxEnemies = 10;
     [SerializeField] private float spawnInterval = 2f;
     [SerializeField] private float baseSpawnInterval = 2f;
@@ -15,10 +15,11 @@ public class EnemyManager : MonoBehaviour
 
     private void Start()
     {
-        // Create default enemy if none is assigned
-        if (enemyPrefab == null)
+        // Create default enemy if no prefabs are assigned
+        if (enemyPrefabs == null || enemyPrefabs.Length == 0)
         {
-            CreateDefaultEnemy();
+            enemyPrefabs = new GameObject[1];
+            enemyPrefabs[0] = CreateDefaultEnemy();
         }
     }
 
@@ -40,7 +41,9 @@ public class EnemyManager : MonoBehaviour
         // Get a random position on the screen edges
         Vector3 spawnPosition = GetRandomSpawnPosition();
         
-        GameObject enemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
+        // Randomly select an enemy prefab
+        GameObject selectedPrefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];
+        GameObject enemy = Instantiate(selectedPrefab, spawnPosition, Quaternion.identity);
         enemy.SetActive(true); 
         
         // Set the speed multiplier after instantiation
@@ -83,34 +86,36 @@ public class EnemyManager : MonoBehaviour
         }
     }
 
-    private void CreateDefaultEnemy()
+    private GameObject CreateDefaultEnemy()
     {
-        enemyPrefab = new GameObject("DefaultEnemy");
+        GameObject defaultEnemy = new GameObject("DefaultEnemy");
         
         // Add visual representation
-        var renderer = enemyPrefab.AddComponent<MeshRenderer>();
-        var filter = enemyPrefab.AddComponent<MeshFilter>();
+        var renderer = defaultEnemy.AddComponent<MeshRenderer>();
+        var filter = defaultEnemy.AddComponent<MeshFilter>();
         filter.mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
         renderer.material = new Material(Shader.Find("Standard"));
         renderer.material.color = Color.red;
         
         // Add physics components
-        var rb = enemyPrefab.AddComponent<Rigidbody>();
+        var rb = defaultEnemy.AddComponent<Rigidbody>();
         rb.useGravity = false;
         rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
         
-        var collider = enemyPrefab.AddComponent<BoxCollider>();
+        var collider = defaultEnemy.AddComponent<BoxCollider>();
         collider.size = Vector3.one * 0.8f;
         
         // Set proper scale
-        enemyPrefab.transform.localScale = Vector3.one * 0.8f;
+        defaultEnemy.transform.localScale = Vector3.one * 0.8f;
         
         // Add Enemy component and configure it
-        var enemyComponent = enemyPrefab.AddComponent<Enemy>();
+        var enemyComponent = defaultEnemy.AddComponent<Enemy>();
         
         // Make it a prefab by deactivating it
-        enemyPrefab.SetActive(false);
+        defaultEnemy.SetActive(false);
         Debug.Log("Default Enemy Prefab created.");
+        
+        return defaultEnemy;
     }
 
     public void ClearAllEnemies()

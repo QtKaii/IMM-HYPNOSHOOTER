@@ -103,7 +103,22 @@ public class GameManager : MonoBehaviour
 
         GameObject playerObject = Instantiate(playerPrefab);
         player = playerObject.GetComponent<PlayerHandler>();
-        Debug.Log("Player spawned.");
+        
+        // Setup camera as child of player
+        Camera mainCamera = Camera.main;
+        if (mainCamera != null)
+        {
+            // Store original position relative to player
+            Vector3 cameraOffset = mainCamera.transform.position - playerObject.transform.position;
+            
+            // Make camera a child of player
+            mainCamera.transform.SetParent(playerObject.transform);
+            // Maintain its world position initially
+            mainCamera.transform.localPosition = cameraOffset;
+        }
+
+        
+        Debug.Log("Player, camera and ground setup completed.");
     }
 
    

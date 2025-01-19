@@ -377,6 +377,55 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 1
+--- !u!1 &581439349
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 581439351}
+  - component: {fileID: 581439350}
+  m_Layer: 0
+  m_Name: GroundMan
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &581439350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 581439349}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b096708218b054b4d9e58cd55f8ba3fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  groundTilePrefab: {fileID: 4386322153879882743, guid: 5c10f08740df6a441b6926c37ceff715, type: 3}
+  tileSize: 2.05
+  gridSize: 20
+  repositionThreshold: 0.1
+  groundHeight: -0.5
+--- !u!4 &581439351
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 581439349}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -497,7 +546,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1362807692
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -616,7 +665,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c59ddcea8b0002478a11ca803f525bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyPrefab: {fileID: 2188796021089496671, guid: 3818d67dc6d0e3244960748806dee56f, type: 3}
+  enemyPrefabs:
+  - {fileID: 2188796021089496671, guid: 4f3f2082e09aa0d4f8dbdbb56d425fa7, type: 3}
+  - {fileID: 2188796021089496671, guid: 4586ab95c9152f04f97b54e11c200262, type: 3}
   maxEnemies: 10
   spawnInterval: 2
   baseSpawnInterval: 2
@@ -647,3 +698,4 @@ SceneRoots:
   - {fileID: 1362807695}
   - {fileID: 1694127067}
   - {fileID: 1228827367}
+  - {fileID: 581439351}

@@ -8,6 +8,12 @@ public class PlayerHandler : MonoBehaviour
     [SerializeField] private float dashDistance = 3f;
     [SerializeField] private float dashDuration = 0.2f;
     public float dashCooldown = 1f;
+    [SerializeField] private Animator animator;
+    [SerializeField] private string movementAnimationParameter = "isMoving";
+    [SerializeField] private string backwardAnimationParameter = "isMovingBack";
+    [SerializeField] private string turningLeftParameter = "isTurningLeft";
+    [SerializeField] private string turningRightParameter = "isTurningRight";
+    [SerializeField] private string boostActiveParameter = "isBoostActive";
 
     [Header("Combat")]
     public int maxAmmo = 5;
@@ -40,6 +46,38 @@ public class PlayerHandler : MonoBehaviour
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
 
+        // Verify animator setup
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+            Debug.LogWarning("Animator was not assigned, attempting to get from GameObject");
+        }
+
+        if (animator != null)
+        {
+            // Verify the parameter exists
+            foreach (AnimatorControllerParameter param in animator.parameters)
+            {
+                Debug.Log($"Found animator parameter: {param.name} of type: {param.type}");
+            }
+            
+            // Check if our movement parameter exists
+            bool hasParameter = false;
+            foreach (AnimatorControllerParameter param in animator.parameters)
+            {
+                if (param.name == movementAnimationParameter)
+                {
+                    hasParameter = true;
+                    break;
+                }
+            }
+            
+            if (!hasParameter)
+            {
+                Debug.LogError($"Animator does not contain parameter: {movementAnimationParameter}");
+            }
+        }
+
         // Create default fire point
         if (firePoint == null)
         {
@@ -50,33 +88,56 @@ public class PlayerHandler : MonoBehaviour
         }
     }
 
+    [SerializeField] private float rotationSpeed = 180f; // Degrees per second
+
     private void HandleMovement()
     {
-        // Get input for horizontal and vertical movement
-        float horizontalInput = Input.GetAxisRaw("Horizontal");
-        float verticalInput = Input.GetAxisRaw("Vertical");
+        // Get input for rotation and forward movement
+        float horizontalInput = Input.GetAxisRaw("Horizontal"); // A/D for rotation
+        float verticalInput = Input.GetAxisRaw("Vertical");     // W for forward movement
 
-        // Create movement vector
-        Vector3 movement = new Vector3(horizontalInput, 0, verticalInput).normalized;
+        // Handle rotation
+        float rotation = horizontalInput * rotationSpeed * Time.deltaTime;
+        transform.Rotate(0, rotation, 0);
+
+        // Handle forward movement
+        Vector3 movement = transform.forward * verticalInput;
 
         // Move the player
         rb.linearVelocity = movement * moveSpeed;
+
+        // Update animation
+        if (animator != null)
+        {
+            bool isMoving = Mathf.Abs(verticalInput) > 0.01f;
+            bool isMovingBack = verticalInput < -0.01f;
+            bool isTurningLeft = horizontalInput < -0.01f;
+            bool isTurningRight = horizontalInput > 0.01f;
+            
+            // Set all animation states
+            animator.SetBool(movementAnimationParameter, isMoving);
+            animator.SetBool(backwardAnimationParameter, isMovingBack);
+            animator.SetBool(turningLeftParameter, isTurningLeft);
+            animator.SetBool(turningRightParameter, isTurningRight);
+            
+            // Debug logging
+            Debug.Log($"Movement Update - Vertical: {verticalInput}, Horizontal: {horizontalInput}");
+            Debug.Log($"Animation States - Moving: {isMoving}, Back: {isMovingBack}, Left: {isTurningLeft}, Right: {isTurningRight}");
+            
+            // Check if we're in the correct state
+            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+            Debug.Log($"Current Animation State: {stateInfo.fullPathHash}, Normalized Time: {stateInfo.normalizedTime}");
+        }
+        else
+        {
+            Debug.LogWarning("No Animator component assigned to PlayerHandler!");
+        }
     }
 
     private void HandleAiming()
     {
-        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-        Plane groundPlane = new Plane(Vector3.up, Vector3.zero);
-
-        if (groundPlane.Raycast(ray, out float distance))
-        {
-            Vector3 mouseWorldPosition = ray.GetPoint(distance);
-            Vector3 aimDirection = (mouseWorldPosition - transform.position).normalized;
-
-            // create a rotation that only changes around the Y-axis
-            Quaternion targetRotation = Quaternion.LookRotation(aimDirection, Vector3.up);
-            transform.rotation = Quaternion.Euler(0, targetRotation.eulerAngles.y, 0);
-        }
+        // Aiming is now handled by A/D rotation
+        return;
     }
 
     private void HandleShooting()
@@ -147,28 +208,8 @@ public class PlayerHandler : MonoBehaviour
     {
         if (!Input.GetKeyDown(KeyCode.Space) || Time.time < lastDashTime + dashCooldown) return;
 
-        Vector3 dashDirection;
-        Vector3 moveInput = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
-
-        if (moveInput.sqrMagnitude > 0.1f)
-        {
-            dashDirection = moveInput.normalized;
-        }
-        else
-        {
-            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-            Plane groundPlane = new Plane(Vector3.up, Vector3.zero);
-
-            if (groundPlane.Raycast(ray, out float distance))
-            {
-                Vector3 mouseWorldPosition = ray.GetPoint(distance);
-                dashDirection = (mouseWorldPosition - transform.position).normalized;
-            }
-            else
-            {
-                dashDirection = transform.forward;
-            }
-        }
+        // Use the player's forward direction for dash
+        Vector3 dashDirection = transform.forward;
 
         StartCoroutine(PerformDash(dashDirection));
         lastDashTime = Time.time;
@@ -178,6 +219,10 @@ public class PlayerHandler : MonoBehaviour
     private IEnumerator PerformDash(Vector3 direction)
     {
         isDashing = true;
+        if (animator != null)
+        {
+            animator.SetBool(boostActiveParameter, true);
+        }
         Vector3 startPos = transform.position;
         Vector3 targetPos = startPos + direction * dashDistance;
         float elapsed = 0f;
@@ -214,6 +259,10 @@ public class PlayerHandler : MonoBehaviour
         }
 
         isDashing = false;
+        if (animator != null)
+        {
+            animator.SetBool(boostActiveParameter, false);
+        }
         Debug.Log("Dash completed.");
     }
 
